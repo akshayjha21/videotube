@@ -30,10 +30,26 @@ const userSchema = new Schema({
 userSchema.methods.ispasswordcorrect=async function(password){
     return await bcrypt.compare(password,this.password)
 }
+//creating the acess token
+
+
 userSchema.methods.generateAccessToken=function(){
     //short lived access token
-    jwt.sign({ 
-       _id:  this.id
-    }, 'shhhhh');
+    return jwt.sign({ 
+       _id:  this.id,
+       username: this.username,
+       email: this.email,
+       fullName: this.fullName,
+    }, process.env.ACESS_TOKEN_SECRET,
+    {expiresIn:process.env.ACCESS_TOKEN_EXPIRY}
+  );
+}
+userSchema.methods.generateRefreshToken=function(){
+    //short lived access token
+    return jwt.sign({ 
+       _id:  this.id,
+    }, process.env.REFRESH_TOKEN_SECRET,
+    {expiresIn:process.env.REFRESH_TOKEN_EXPIRY}
+  );  
 }
 export const user=mongoose.model("User",userSchema)

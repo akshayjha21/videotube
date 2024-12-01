@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors"
 import { healthcheck } from "./controllers/healthcheck.controllers.js";
+import cookieParser from 'cookie-parser'
 
 const app = express();
 
@@ -15,6 +16,7 @@ app.use(//it act as a middleware which allows only selected website to work with
 app.use(express.json({limit:"16kb"}))
 app.use(express.urlencoded({extended:true,limit:"16kb"}))
 app.use(express.static("public"))//can acces public folders 
+app.use(cookieParser())
 
 
 // import routes
