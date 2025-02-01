@@ -1,0 +1,19 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "../../../Mydesktopfiles/JAVASCRIPT"
+		},
+		{
+			"path": "../../../../proj exhi"
+		},
+		{
+			"path": "../../../akshayts"
+		}
+	],
+	"settings": {
+		"liveServer.settings.multiRootWorkspaceName": "akshayts"
+	}
+}
