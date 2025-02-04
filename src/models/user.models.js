@@ -52,4 +52,4 @@ userSchema.methods.generateRefreshToken=function(){
     {expiresIn:process.env.REFRESH_TOKEN_EXPIRY}
   );  
 }
-export const user=mongoose.model("User",userSchema)
+export const User=mongoose.model("User",userSchema)

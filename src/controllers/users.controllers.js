@@ -1,18 +1,18 @@
 import { apierror } from "../utils/apierror.js";
 import { asynchandler } from "../utils/asynchandler.js";
 import { apiresponse } from "../utils/apiresponse.js";
-import { user } from "../models/user.models.js"; // Corrected import statement
+import {User} from "../models/user.models.js" // Corrected import statement
 import { uploadcloudinary } from "../utils/cloudinary.js";
 
 const registerUser = asynchandler(async (req, res) => {
     const { fullname, email, username, password } = req.body;
 
     // Validation if all fields are there or not
-    if ([fullname, email, username, password].some((field) => field?.trim() === "")) {
+    if ([fullName, email, username, password].some((field) => field?.trim() === "")) {
         throw new apierror(400, "All fields are required");
     }
     // Validation if user existed or not
-    const existeduser = await user.findOne({
+    const existeduser = await User.findOne({
         $or: [{ email }, { username }]
     });
     if (existeduser) {
@@ -25,7 +25,7 @@ const registerUser = asynchandler(async (req, res) => {
     }
     const avatar = await uploadcloudinary(avatarlocalpath);
     let coverimage = "";
-    if (coverimage) {
+    if (coverlocalpath) {
         coverimage = await uploadcloudinary(coverimage);
     }
     const user = await user.create({
