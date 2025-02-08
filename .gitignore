@@ -4,6 +4,8 @@ node_modules/
 # Ignore environment files
 .env
 .env.sample
+public/temp
+
 
 # Ignore build folders
 dist/
