@@ -9,14 +9,14 @@ const router=Router();
 router.route("/register").post(
     upload.fields([
         {
-            name:"avatar",
-            maxcount:1
+            name: "avatar",
+            maxCount: 1
         },
         {
-            name:"coverimage",
-            maxcount:1
+            name: "coverimage",
+            maxCount: 1
         }
-    ]  
-    )
-    ,registerUser)
-export default router 
+    ]),
+    registerUser
+);
+export default router

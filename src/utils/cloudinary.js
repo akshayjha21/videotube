@@ -5,7 +5,7 @@ import fs from "fs";
 cloudinary.config({ 
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME, 
     api_key: process.env.CLOUDINARY_API_KEY, 
-    api_secret: process.env.CLOUDINARY_API_SECRET // Click 'View API Keys' above to copy your API secret
+    api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
 const uploadcloudinary = async (localfilepath) => {
@@ -16,14 +16,17 @@ const uploadcloudinary = async (localfilepath) => {
                 resource_type: "auto",
             }
         );
-        console.log("file uploaded on cloudinary. file src: " + response.url);
-        // Once the file is uploaded, we would like to delete it from our servers 
+        console.log("File uploaded to Cloudinary. File URL: " + response.url);
+        // Once the file is uploaded, delete it from the server
         fs.unlinkSync(localfilepath);
         return response;
     } catch (error) {
-        fs.unlinkSync(localfilepath);
+        console.error("Error uploading to Cloudinary:", error);
+        if (fs.existsSync(localfilepath)) {
+            fs.unlinkSync(localfilepath);
+        }
         return null;
     }
 };
 
-export { uploadcloudinary }; // Exporting the function
+export { uploadcloudinary };

@@ -3,12 +3,19 @@ import { asynchandler } from "../utils/asynchandler.js";
 import { apiresponse } from "../utils/apiresponse.js";
 import {User} from "../models/user.models.js" // Corrected import statement
 import { uploadcloudinary } from "../utils/cloudinary.js";
+import dotenv from 'dotenv';
+dotenv.config();
+
 
 const registerUser = asynchandler(async (req, res) => {
     const { fullname, email, username, password } = req.body;
 
+    // Log the request body and files for debugging
+    console.log("Request Body:", req.body);
+    console.log("Request Files:", req.files);
+
     // Validation if all fields are there or not
-    if ([fullName, email, username, password].some((field) => field?.trim() === "")) {
+    if ([fullname, email, username, password].some((field) => field?.trim() === "")) {
         throw new apierror(400, "All fields are required");
     }
     // Validation if user existed or not
@@ -18,17 +25,18 @@ const registerUser = asynchandler(async (req, res) => {
     if (existeduser) {
         throw new apierror(409, "User already existed");
     }
-    const avatarlocalpath = req.files?.avatar[0]?.path;
-    const coverlocalpath = req.files?.coverimage[0]?.path;
+    const avatarlocalpath = req.files?.avatar?.[0]?.path;
+    const coverlocalpath = req.files?.coverimage?.[0]?.path;
     if (!avatarlocalpath) {
         throw new apierror(400, "Avatar file is missing");
     }
     const avatar = await uploadcloudinary(avatarlocalpath);
+    console.log("Avatar URL:", avatar.url);
     let coverimage = "";
     if (coverlocalpath) {
-        coverimage = await uploadcloudinary(coverimage);
+        coverimage = await uploadcloudinary(coverlocalpath);
     }
-    const user = await user.create({
+    const user = await User.create({
         fullname,
         email,
         avatar: avatar.url,
