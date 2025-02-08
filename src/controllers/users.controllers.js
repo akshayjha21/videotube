@@ -1,11 +1,10 @@
 import { apierror } from "../utils/apierror.js";
 import { asynchandler } from "../utils/asynchandler.js";
 import { apiresponse } from "../utils/apiresponse.js";
-import {User} from "../models/user.models.js" // Corrected import statement
+import { User } from "../models/user.models.js"; // Corrected import statement
 import { uploadcloudinary } from "../utils/cloudinary.js";
 import dotenv from 'dotenv';
 dotenv.config();
-
 
 const registerUser = asynchandler(async (req, res) => {
     const { fullname, email, username, password } = req.body;
@@ -25,28 +24,39 @@ const registerUser = asynchandler(async (req, res) => {
     if (existeduser) {
         throw new apierror(409, "User already existed");
     }
+    console.warn(req.files);
     const avatarlocalpath = req.files?.avatar?.[0]?.path;
     const coverlocalpath = req.files?.coverimage?.[0]?.path;
-    if (!avatarlocalpath) {
-        throw new apierror(400, "Avatar file is missing");
+
+    let avatar;
+    try {
+        avatar = await uploadcloudinary(avatarlocalpath);
+        console.log("Avatar URL:", avatar.url); // Moved this line here
+    } catch (error) {
+        console.log("Error uploading avatar to Cloudinary:", error);
+        throw new apierror(500, "Error uploading avatar to Cloudinary");
     }
-    const avatar = await uploadcloudinary(avatarlocalpath);
-    console.log("Avatar URL:", avatar.url);
-    let coverimage = "";
-    if (coverlocalpath) {
+
+    let coverimage;
+    try {
         coverimage = await uploadcloudinary(coverlocalpath);
+        console.log("Cover Image URL:", coverimage);
+    } catch (error) {
+        console.log("Error uploading coverimage to Cloudinary:", error);
+        throw new apierror(500, "Error uploading coverimage to Cloudinary");
     }
+
     const user = await User.create({
         fullname,
         email,
         avatar: avatar.url,
         coverimage: coverimage?.url || "",
-        username: username.toLowerCase(),
+        username: username ? username.toLowerCase() : "", // Updated line
         password,
     });
     // We have to validate the user
-    const createduser = await user.findById(user._id).select(
-        "-password -refreshToken"
+    const createduser = await User.findById(user._id).select(
+        "-password -refreshToken" // Updated line
     );
     if (!createduser) {
         throw new apierror(500, "Something went wrong while registering a user");
