@@ -5,7 +5,27 @@ import { User } from "../models/user.models.js"; // Corrected import statement
 import { uploadcloudinary } from "../utils/cloudinary.js";
 import dotenv from 'dotenv';
 dotenv.config();
-
+//now we have to create a function to generate the access token and refresh token
+const generateAccessandRefereshToken=async(userId)=>{
+try {
+         //firing up the query to find the user
+         const user=await User.findById(userId);
+         if(!user){
+            throw new apierror(404,"User not found");
+         }
+         //now using this user we will generate acess token and referesh token
+        const acessToken=user.generateAccessToken();
+        const refreshToken=user.generateRefreshToken();
+    
+        user.refreshToken=refreshtoken;
+        await user.save({validateBeforeSave:false});
+        return {acesstoken,refreshtoken};
+} catch (error) {
+    console.log("Error generating access and refresh token:", error);
+    throw new apierror(500, "Error generating access and refresh token");
+    
+}
+}
 const registerUser = asynchandler(async (req, res) => {
     const { fullname, email, username, password } = req.body;
 
@@ -65,7 +85,49 @@ const registerUser = asynchandler(async (req, res) => {
         .status(201)
         .json(new apiresponse(200, createduser));
 });
+//now we are done with the user registration 
+//now we have to work on the login part
+//we have to create a login controller
+//so first we need an instance of user model and we have to find the user by which we can grab the accesstooken and refreshtoken
+
+//login user
+
+const loginUser=asynchandler(async(req,res)=>{
+    //get user para from user body
+    const{email,username,password}=req.body;
+    //validating the user
+    if(!email){
+        throw new apierror(400,"email is required")
+    }
+    const user = await User.findOne({
+        $or: [{ email }, { username }]
+    });
+    if(!user){
+        throw new apierror(400,"user doesn't exist")
+    }
+    const ispasswordValid=await user.ispasswordcorrect(password)
+    if(!ispasswordValid){
+        throw new apierror("Invalid credentials")
+    }
+    //generating acess and refresh token
+    const {acessToken,refreshToken}= await generateAccessandRefereshToken(user._id);
+    
+    const loggedInUser=await user.findById(user._id)
+    .select("-password -refreshToken");
+
+    const options={
+        httpOnly:true,
+        secure: process.env.NODE_ENV==="production"
+    }
+    return res
+        .status(200)
+        .cookie("acessToken",acessToken,options)
+        .cookie("refreshToken",refreshToken,options)
+        .json(new apiresponse(200,loggedInUser,"User Loged in succesfully"))
+    
+})
 
 export {
-    registerUser
+    registerUser,
+    loginUser
 };
