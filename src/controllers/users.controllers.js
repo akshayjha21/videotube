@@ -130,8 +130,24 @@ const loginUser=asynchandler(async(req,res)=>{
 //
 const logoutUser=asynchandler(async(req,res)=>{
     await User.findByIdAndUpdate(
-        //Todo: need to come back here after middleware
+        req.user._id,
+        {
+            $set:{
+                refreshToken:undefined, 
+            }
+            
+        },
+        {new:true}
     )
+    const options={
+        httpOnly:true,
+        secure:process.env.NODE_ENV="production"
+    }
+    return res
+    .status(200)
+    .clearCookie("acessToken",options)
+    .clearCookie("refreshToken",options)
+    .json(new apiresponse(200,{},"User logged out successfully"))
 })
 const refreshAcessToken=asynchandler(async(req,res)=>{
     const incomingRefreshToken=req.cookies.refreshToken||req.body.refreshToken //getting the refresh token from body or cookies
