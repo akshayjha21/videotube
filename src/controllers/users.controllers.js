@@ -114,7 +114,7 @@ const loginUser=asynchandler(async(req,res)=>{
     
     const loggedInUser=await user.findById(user._id)
     .select("-password -refreshToken");
-
+//creating cookies
     const options={
         httpOnly:true,
         secure: process.env.NODE_ENV==="production"
@@ -127,7 +127,44 @@ const loginUser=asynchandler(async(req,res)=>{
     
 })
 
+const refreshAcessToken=asynchandler(async(req,res)=>{
+    const incomingRefreshToken=req.cookies.refreshToken||req.body.refreshToken //getting the refresh token from body or cookies
+    if(!incomingRefreshToken){
+        throw new apierror(401,"refresh token is required")
+    }
+    //if refresh tokens are available then we will fit in try-catch block
+    try {
+        const decodedToken=JsonWebTokenError.verify(
+            incomingRefreshToken,
+            process.env.REFRESH_TOKEN_SECRET
+        )
+        const user = await User.findById(decodedToken?._id)
+        if(!user){
+            throw new apierror(401,"Invalid referesh token")
+        }
+        if(incomingRefreshToken!==user?.refreshToken){
+            throw new apierror(401,"Invalid refresh token")
+        }
+        const options={
+            httpOnly:true,
+            secure:process.env.NODE_ENV="production"
+        }
+        const {acessToken,refereshToken:newRefreshToken}=
+        await generateAccessandRefereshToken(user._id)
+
+        return res
+        .status(200)
+        .cookie("accestoken",acessToken,options)
+        .cookie("refereshtoken",newRefreshToken,options)
+        .json(new apiresponse(200,{acessToken,refreshToken:newRefreshToken},"Acess token refreshed successfully"))
+        
+    } catch (error) {
+        throw new apierror(500,"something went wrong while refreshing acess token")
+        
+    }
+})
 export {
     registerUser,
-    loginUser
+    loginUser,
+    refreshAcessToken
 };
