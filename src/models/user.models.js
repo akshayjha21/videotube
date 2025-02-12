@@ -22,6 +22,7 @@ const userSchema = new Schema({
 
   userSchema.pre("save", async function (next) {
     //this is used to check if the password is provided or not been updated then don't run the encryption method
+    //good when we provide a newpassword it just bycrypt it ...really good middleware
     if (!this.isModified("password")) return next();
     this.password = await bcrypt.hash(this.password, 10);
     next();

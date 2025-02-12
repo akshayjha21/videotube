@@ -19,7 +19,7 @@ try {
     
         user.refreshToken=refreshtoken;
         await user.save({validateBeforeSave:false});
-        return {acesstoken,refreshtoken};
+        return {acessToken,refreshToken};
 } catch (error) {
     console.log("Error generating access and refresh token:", error);
     throw new apierror(500, "Error generating access and refresh token");
@@ -185,9 +185,113 @@ const refreshAcessToken=asynchandler(async(req,res)=>{
         
     }
 })
+
+const changeCurrentPassword=asynchandler(async(req,res)=>{
+//give me the old password and new password from the reqbody
+    const {newpassword,oldpassword}=req.body
+    const user=await User.findById(req.user?._id)
+    if(!user){
+        throw new apierror(401,"User not found")
+    }
+    //first we are checking if the password given is correct or not
+    const ispasswordValid=user.ispasswordcorrect(oldpassword)
+    if(!ispasswordValid){
+        throw new apierror(402,"Old password is incorrect")
+    }
+    //if yes then we are changing the user schema of password into newpassword
+    user.password=newpassword
+
+    await user.save({validateBeforeSave:false})
+
+    //returning the respond
+    return res.status(200).json(new apiresponse(200,{},"password changed succesfully"))
+})
+const getCurrentUser=asynchandler(async(req,res)=>{
+    //user is already store in the req body..we just have to return it back
+    res.status(200).json(new apiresponse(200,{},"current user details"))
+})
+const UpdateAccountdetails=asynchandler(async(req,res)=>{
+    //here first we will decide which part of user body you want to update...like i want user to update their email and full name not the username...so i will grab the fullname and email from the user body
+    const{fullname,email}=req.body
+    //check if the user exist in the body or not
+    if(!(fullname || email)){
+        throw new apierror(400,"fullname and email are required")
+    }
+    const user=await User.findByIdAndUpdate(
+        //fecting the user
+        req.user?._id,
+        //we will set the user
+        {
+            $set:{
+                fullname,
+                email:email
+            }
+        },
+        {
+            new:true
+        }
+    ).select("-password -refreshtToken")//don't need password and refreshtoken to come in   
+    res.status(200).json(new apiresponse(200,{},"user is updated succesfully"))
+})
+const UpdateUserAvatar=asynchandler(async(req,res)=>{
+    //we will grab the images from user input and then change it 
+    const avatarlocalpath=req.files?.path;
+    if(!avatarlocalpath){
+        throw new apierror(404,"File is required")
+    }
+    const avatar=await uploadcloudinary(avatarlocalpath)
+    //we are returning the avatar url from the user
+    if(!avatar.url){
+        throw new apierror(500,"something went wrong while uploading avatar")
+    }
+    //now we will find the user and the avatar key
+
+    const user=await User.findByIdAndUpdate(
+        req.user?._id,
+        {
+            
+                $set:{
+                    avatar:avatar.url
+                }
+        },
+        {new:true}
+    ).select("-password -refreshToken")
+    res.status(200).json(new apiresponse(200,{},"avatar updated succefully"))
+})
+
+const UpdateUserCoverImage=asynchandler(async(req,res)=>{
+    const coverlocalpath=req.files?.path;
+    if(!coverlocalpath){
+        throw new apierror(404,"File is required")
+    }
+    const cover=await uploadcloudinary(coverlocalpath)
+    //we are returning the avatar url from the user
+    if(!cover.url){
+        throw new apierror(500,"something went wrong while uploading coverinage")
+    }
+    //now we will find the user and the avatar key
+
+    const user=await User.findByIdAndUpdate(
+        req.user?._id,
+        {
+            
+                $set:{
+                    coverimage:cover.url
+                }
+        },
+        {new:true}
+    ).select("-password -refreshToken")
+    res.status(200).json(new apiresponse(200,{},"coverimage updated succefully"))
+})
+
 export {
     registerUser,
     loginUser,
     refreshAcessToken,
-    logoutUser
-};
+    logoutUser,
+    changeCurrentPassword,
+    getCurrentUser,
+    UpdateAccountdetails,
+    UpdateUserAvatar,
+    UpdateUserCoverImage
+}
